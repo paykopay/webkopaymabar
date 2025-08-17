@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>😈 Ultimate Prank: Update ➜ BSOD ➜ Virus Pop-ups ➜ Countdown</title>
+  <meta name="theme-color" content="#000000" />
+  <style>
+    :root{
+      --fg:#e6f1ff; --muted:#9fb2d6; --accent:#46d160; --danger:#ff4d4f;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:#000;color:var(--fg);}
+
+    /* Base full-screen stage */
+    .stage{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px}
+    .show{display:flex}
+
+    /* UPDATE FAKE */
+    .update{background:radial-gradient(1200px 800px at 70% -10%,#1b2455 0,#0b1020 55%,#070b16 100%)}
+    .update .box{max-width:680px;width:92%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;box-shadow:0 20px 80px rgba(0,0,0,.55)}
+    .title{font-size:clamp(22px,4vw,34px);font-weight:800;margin:0 0 4px}
+    .sub{margin:0 0 18px;color:var(--muted)}
+    .progress{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,#157a15,#2ddf7f)}
+    .pct{margin-top:10px;font-variant-numeric:tabular-nums}
+
+    /* BSOD FAKE */
+    .bsod{background:#0078d7;color:#fff}
+    .bsod .wrap{max-width:900px}
+    .bsod .sad{font-size:12vw;line-height:1;margin:0}
+    .bsod h2{font-size:clamp(22px,4vw,40px);margin:.5em 0}
+    .bsod p{opacity:.95}
+    .qr{width:19vmin;height:19vmin;background:repeating-linear-gradient(45deg,#111 0 4px,#eee 4px 8px);margin:16px auto 0}
+
+    /* VIRUS POPUPS */
+    .pop-layer{position:fixed;inset:0;pointer-events:none}
+    .pop{position:absolute;min-width:220px;max-width:360px;background:#0f1731;color:#bfead5;border:1px solid rgba(255,255,255,.18);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:12px 12px 10px;pointer-events:auto}
+    .pop header{display:flex;align-items:center;justify-content:space-between;font-weight:700;margin-bottom:8px}
+    .pop .body{font-family:ui-monospace, Menlo, monospace;font-size:12px;line-height:1.4;color:#9fd}
+    .pop .x{background:#ff4d4f;color:#fff;border:0;border-radius:8px;padding:4px 8px;font-weight:800;cursor:not-allowed;opacity:.8}
+
+    /* COUNTDOWN */
+    .count{background:#000; color:#fff}
+    .count .num{font-size:clamp(64px,20vw,220px);font-weight:900;letter-spacing:0.02em;line-height:1;margin:0}
+    .count .cap{color:#ffb3b3;margin-top:8px}
+
+    /* REVEAL */
+    .reveal{background:radial-gradient(900px 600px at 50% 10%, #1bff9e22, transparent 70%);display:none;place-items:center;text-align:center}
+    .reveal.show{display:grid}
+    .reveal h1{font-size:clamp(34px,10vw,86px);margin:0 0 6px}
+    .reveal p{color:#cfead9;margin:0 0 14px}
+    .cta{display:inline-flex;gap:8px;align-items:center;background:#17c964;border:none;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}
+
+    /* Helper watermark + no-exit note */
+    .wm{position:fixed;bottom:8px;right:10px;font-size:12px;color:#7affb3;opacity:.2}
+
+    /* Prevent selection/zoom hints */
+    body{-webkit-tap-highlight-color: transparent;-webkit-user-select:none;user-select:none}
+  </style>
+</head>
+<body>
+  <!-- UPDATE STAGE -->
+  <section id="stage-update" class="stage update show">
+    <div class="box">
+      <h1 class="title">System Update in Progress…</h1>
+      <p class="sub">Optimizing files, do not turn off your device.</p>
+      <div class="progress"><div id="updBar" class="bar"></div></div>
+      <div id="updPct" class="pct">0%</div>
+    </div>
+  </section>
+
+  <!-- BSOD STAGE -->
+  <section id="stage-bsod" class="stage bsod">
+    <div class="wrap">
+      <p class="sad">:(</p>
+      <h2>Your PC ran into a problem and needs to restart.</h2>
+      <p>We're just collecting some error info, and then we'll restart for you. <span id="bsodPct">0%</span> complete</p>
+      <div class="qr" aria-label="QR"></div>
+    </div>
+  </section>
+
+  <!-- VIRUS POPUP STAGE -->
+  <section id="stage-pop" class="stage" style="background:#02060f;">
+    <div class="pop-layer" id="popLayer"></div>
+  </section>
+
+  <!-- COUNTDOWN STAGE -->
+  <section id="stage-count" class="stage count">
+    <div>
+      <h1 class="num" id="countNum">10</h1>
+      <div class="cap">System wipe in…</div>
+    </div>
+  </section>
+
+  <!-- REVEAL / END -->
+  <section id="stage-reveal" class="reveal">
+    <div>
+      <h1>🎉 YOU GOT PRANKED 🎉</h1>
+      <p>Tenang, semua ini cuma simulasi. Tidak ada data yang diubah.</p>
+      <button class="cta" id="btnReplay">Mainkan Lagi</button>
+    </div>
+  </section>
+
+  <div class="wm">Tekan Q (PC) / Ketuk 5x cepat (HP) untuk keluar • Fullscreen aktif</div>
+
+  <!-- Sounds -->
+  <audio id="sUpdate" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_ba8a1a.mp3?filename=ui-notification-101010.mp3"></audio>
+  <audio id="sError" preload="auto" src="https://cdn.pixabay.com/download/audio/2021/09/07/audio_3b0f9b32c3.mp3?filename=error-2-126514.mp3"></audio>
+  <audio id="sAlarm" preload="auto" loop src="https://cdn.pixabay.com/download/audio/2021/11/23/audio_2f9a6a.mp3?filename=alarm-frenzy-10874.mp3"></audio>
+
+  <script>
+    const q = sel => document.querySelector(sel);
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+    // Stages
+    const stUpdate = q('#stage-update');
+    const stBsod   = q('#stage-bsod');
+    const stPop    = q('#stage-pop');
+    const stCount  = q('#stage-count');
+    const stReveal = q('#stage-reveal');
+
+    // UI
+    const updBar = q('#updBar');
+    const updPct = q('#updPct');
+    const bsodPct = q('#bsodPct');
+    const popLayer = q('#popLayer');
+    const countNum = q('#countNum');
+
+    // Sounds
+    const sUpdate = q('#sUpdate');
+    const sError  = q('#sError');
+    const sAlarm  = q('#sAlarm');
+
+    // Secret exit
+    let tapCount = 0;
+    document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='q') endReveal(); });
+    document.body.addEventListener('click', ()=>{
+      tapCount++; setTimeout(()=> tapCount = 0, 450);
+      if(tapCount>=5) endReveal();
+    });
+
+    // Try fullscreen aggressively
+    function goFS(){
+      const el = document.documentElement;
+      if(!document.fullscreenElement){
+        (el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen||el.mozRequestFullScreen)?.call(el);
+      }
+    }
+    window.addEventListener('load', ()=>{
+      goFS();
+      document.addEventListener('click', goFS, {once:true});
+      document.addEventListener('touchstart', goFS, {once:true});
+      startSequence();
+      // warm up sounds on first interaction (for autoplay policies)
+      const prime = ()=>{ [sUpdate,sError,sAlarm].forEach(a=>{ a.volume=0; a.play().then(()=>a.pause()); });
+        document.removeEventListener('click', prime);
+        document.removeEventListener('touchstart', prime);
+      };
+      document.addEventListener('click', prime);
+      document.addEventListener('touchstart', prime);
+    });
+
+    // Prevent some exits (best effort)
+    window.addEventListener('contextmenu', e=> e.preventDefault());
+    window.addEventListener('keydown', e=>{
+      if(['F11','F5'].includes(e.key) || (e.ctrlKey && ['r','R','w','W'].includes(e.key))) e.preventDefault();
+    });
+    // History trap
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', ()=> history.pushState(null, '', location.href));
+
+    function show(stage){
+      [stUpdate,stBsod,stPop,stCount].forEach(s=> s.classList.remove('show'));
+      stage.classList.add('show');
+    }
+
+    async function startSequence(){
+      // 1) UPDATE (8s, up to 130%)
+      show(stUpdate);
+      sUpdate.volume = .7; safePlay(sUpdate);
+      await runUpdate(8000);
+
+      // 2) BSOD (6s)
+      show(stBsod);
+      await runBsod(6000);
+
+      // 3) VIRUS POPUPS (10s)
+      show(stPop);
+      await runPopups(10000);
+
+      // 4) COUNTDOWN (10..0)
+      show(stCount);
+      await runCountdown(10);
+
+      // 5) Reveal
+      endReveal();
+    }
+
+    function safePlay(a){
+      const tryPlay = ()=> a.play().catch(()=>{});
+      tryPlay();
+      document.addEventListener('click', tryPlay, {once:true});
+      document.addEventListener('touchstart', tryPlay, {once:true});
+    }
+
+    function runUpdate(ms){
+      return new Promise(res=>{
+        const t0 = Date.now();
+        const maxPct = 130; // bisa lebih dari 100
+        const iv = setInterval(()=>{
+          const p = Math.min(maxPct, ((Date.now()-t0)/ms)*maxPct);
+          updBar.style.width = p + '%';
+          updPct.textContent = Math.floor(p) + '%';
+          if(p>=maxPct){ clearInterval(iv); res(); }
+        }, 90);
+        setTimeout(()=>{ clearInterval(iv); res(); }, ms+200);
+      });
+    }
+
+    function runBsod(ms){
+      return new Promise(res=>{
+        const t0 = Date.now();
+        const iv = setInterval(()=>{
+          const p = Math.min(99, Math.floor(((Date.now()-t0)/ms)*99));
+          bsodPct.textContent = p + '%';
+        }, 120);
+        sError.volume = .9; safePlay(sError);
+        setTimeout(()=>{ clearInterval(iv); res(); }, ms);
+      });
+    }
+
+    function rand(min,max){ return Math.random()*(max-min)+min; }
+    function randInt(min,max){ return Math.floor(rand(min,max)); }
+
+    function makePopup(){
+      const el = document.createElement('div');
+      el.className = 'pop';
+      const x = randInt(0, window.innerWidth-280);
+      const y = randInt(0, window.innerHeight-160);
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      el.innerHTML = `
+        <header>⚠ Virus Detected <button class="x">X</button></header>
+        <div class="body">[${new Date().toLocaleTimeString()}] Infected file: C:/Users/Public/${Math.random().toString(16).slice(2,8)}.tmp<br>
+        Quarantining... FAILED<br>Deleting... FAILED</div>`;
+      popLayer.appendChild(el);
+      // fake bouncing
+      let dx = rand(-2,2), dy = rand(-2,2);
+      const mv = setInterval(()=>{
+        const r = el.getBoundingClientRect();
+        let nx = r.left + dx, ny = r.top + dy;
+        if(nx<0||nx>window.innerWidth-r.width) dx*=-1;
+        if(ny<0||ny>window.innerHeight-r.height) dy*=-1;
+        el.style.left = Math.max(0, Math.min(window.innerWidth-r.width, nx)) + 'px';
+        el.style.top  = Math.max(0, Math.min(window.innerHeight-r.height, ny)) + 'px';
+      }, 30);
+      // disable close
+      el.querySelector('.x').addEventListener('click',(e)=>{ e.preventDefault(); });
+      return ()=>{ clearInterval(mv); el.remove(); };
+    }
+
+    function runPopups(ms){
+      return new Promise(res=>{
+        const killers = [];
+        const spawn = setInterval(()=>{ killers.push(makePopup()); }, 180);
+        setTimeout(()=>{ clearInterval(spawn); res(); }, ms);
+      });
+    }
+
+    function runCountdown(n){
+      return new Promise(res=>{
+        sAlarm.volume = .85; safePlay(sAlarm);
+        let i = n;
+        const step = ()=>{
+          countNum.textContent = i;
+          if(isMobile && navigator.vibrate){ navigator.vibrate([80, 80, 80]); }
+          if(i<=0){ sAlarm.pause(); res(); return; }
+          i--; setTimeout(step, 1000);
+        };
+        step();
+      });
+    }
+
+    function endReveal(){
+      [stUpdate,stBsod,stPop,stCount].forEach(s=> s.classList.remove('show'));
+      sAlarm.pause();
+      stReveal.classList.add('show');
+      stReveal.classList.add('reveal');
+    }
+
+    q('#btnReplay').addEventListener('click', ()=>{ location.reload(); });
+  </script>
+</body>
+</html>
